@@ -120,6 +120,8 @@ input[type=text]:focus,textarea:focus,select:focus{box-shadow:0 0 0 4px rgba(240
 .std.on{background:var(--s1); box-shadow:4px 4px 0 var(--ink)}
 .std code{font-family:"Jua"; font-size:17px; background:var(--pink-soft); border-radius:8px; padding:0 6px}
 .std p{margin:.4em 0; font-size:15px}
+.std .sub{font-size:13px; color:var(--ink-soft); margin-bottom:2px}
+.stdgrp{grid-column:1/-1; font-family:"Jua"; font-size:18px; margin-top:6px}
 .std .idea{font-size:14px; color:var(--ink-soft)}
 
 /* 프롬프트 박스 */
@@ -363,9 +365,10 @@ footer .fbox{display:inline-block; background:rgba(255,251,242,.85); border:2px 
   <div class="card">
     <div class="ptitle"><span class="badge" style="background:var(--s1)">STEP 1</span><h2>마음 가는 성취기준, 딱 하나만!</h2><span class="time">⏱ 10분</span></div>
     <p class="lead">교육과정 속 성취기준이 우리 여행의 <span class="hl">출발 지도</span>예요. 마음 가는 카드 하나를 눌러 주세요.</p>
+    <p class="muted" style="margin:4px 0 0">지금 <b id="stdLevel">중학교</b> 성취기준을 보여 드려요. 학교급은 <a href="#" data-go="0">0 준비</a>에서 바꿀 수 있어요.</p>
     <div class="stds" id="stds"></div>
-    <label class="f" for="stdCustom">초등·고등이거나 다른 성취기준을 쓰고 싶다면 <small>직접 적어요</small></label>
-    <input type="text" id="stdCustom" placeholder="예) [6실02-03] 균형 잡힌 식사의 중요성을 알고 …">
+    <label class="f" for="stdCustom">목록에 없는 성취기준을 쓰고 싶다면 <small>직접 적어요 (다른 교과 융합도 좋아요)</small></label>
+    <input type="text" id="stdCustom" placeholder="예) [6과05-03] … 처럼 코드와 문장을 함께 적어요">
   </div>
 
   <div class="card alt">
@@ -580,13 +583,37 @@ footer .fbox{display:inline-block; background:rgba(255,251,242,.85); border:2px 
 <script>
 (function(){
 const KEY='nutri-backward-v1';
-const STDS=[
-  {code:'[9기가01-02]',text:'의생활, 식생활이 청소년기 성장과 건강에 미치는 영향을 탐색하고 바람직한 실천 방안을 탐색하여 실천한다.',ideas:['성장기 우리 몸에 맞는 식생활 실천 챌린지','나의 몸 사용 설명서']},
-  {code:'[9기가01-03]',text:'건강과 성장을 위한 청소년기 영양의 중요성을 이해하여 자신의 식생활을 평가하고, 식생활 문제를 개선하여 건강한 식생활을 실천한다.',ideas:['나의 한 끼 이야기 글쓰기','아침밥 살리기 프로젝트']},
-  {code:'[9기가02-02]',text:'한국인 영양소 섭취기준과 식사구성안을 바탕으로 균형 잡힌 식사를 계획한다.',ideas:['균형 식판 게임 만들기','우리 반 추천 식단 짜기']},
-  {code:'[9기가02-03]',text:'건강과 환경을 고려한 식품의 선택, 관리, 보관 방법을 탐색하여 실생활에 적용한다.',ideas:['편의점, 환생시키기!','과자 성분표 탐정단','식품 보관 캠페인']},
-  {code:'[9기가02-04]',text:'개인과 가족의 영양 요구와 지속가능성을 충족하는 식사를 계획하고 조리한다.',ideas:['제철·로컬 푸드 한 끼','제로 웨이스트 급식 챌린지']}
-];
+const E='실과 (5~6학년군)', M='기술·가정 (중학교)', H='기술·가정 (일반선택)', HL='생활과학 탐구 (진로선택)', HJ='생애 설계와 자립 (융합선택)';
+const STDS_BY={
+  '초등학교':[
+    {sub:E,core:1,code:'[6실01-04]',text:'균형 잡힌 식사의 중요성과 조건을 탐색하여 자신의 식습관을 검토해 보고 건강한 식습관 형성에 적용한다.',ideas:['골고루 식판 탐험대','내 식습관 탐정 일기']},
+    {sub:E,core:1,code:'[6실02-04]',text:'식재료 생산과 선택의 중요성을 인식하고 여러 식재료의 고유하고 다양한 맛을 경험하여 자신의 식사에 적용한다.',ideas:['처음 먹어 보는 채소 맛 탐험','우리 동네 식재료 지도']},
+    {sub:E,core:1,code:'[6실02-05]',text:'음식의 조리과정을 체험하여 자신의 간식이나 식사를 스스로 마련하는 식생활을 실천한다.',ideas:['내가 만드는 건강 간식','한 그릇 꼬마 요리사']},
+    {sub:E,core:1,code:'[6실02-06]',text:'우리나라 밥상차림을 이해하고, 함께 식사하는 즐거움을 경험하면서 이 과정에서 식사 예절을 실천한다.',ideas:['우리 집 밥상 차려 보기','즐거운 밥상 예절 캠페인']},
+    {sub:E,code:'[6실01-02]',text:'건강한 발달을 위한 자기 관리 방법을 탐색하고, 일상생활 속에서 올바른 생활습관과 태도를 갖도록 계획하여 실천한다.',ideas:['아침밥 먹고 쑥쑥 챌린지','내 몸 건강 습관 달력']},
+    {sub:E,code:'[6실02-11]',text:'생태 지향적 삶을 위해 자신의 의식주 생활에서 할 수 있는 구체적인 행동을 계획하여 실천한다.',ideas:['지구를 살리는 한 끼','잔반 제로 우리 반']},
+    {sub:E,code:'[6실04-08]',text:'생활 속 동식물을 기르고 가꾸는 방법을 알고, 동식물을 기르고 가꾸는 체험을 통해 생태 존중감을 가진다.',ideas:['교실 텃밭 상추 키워 먹기','방울토마토 성장 일기']},
+    {sub:E,code:'[6실04-10]',text:'생활 속에서 농업활동과 관련된 모습을 분석하고 이에 따른 농업활동을 체험하여 농업에 대한 관심을 두고 이를 생활 속에서 실천한다.',ideas:['급식 재료는 어디서 올까?','꼬마 농부 체험 보고서']}
+  ],
+  '중학교':[
+    {sub:M,core:1,code:'[9기가01-02]',text:'의생활, 식생활이 청소년기 성장과 건강에 미치는 영향을 탐색하고 바람직한 실천 방안을 탐색하여 실천한다.',ideas:['성장기 우리 몸에 맞는 식생활 실천 챌린지','나의 몸 사용 설명서']},
+    {sub:M,core:1,code:'[9기가01-03]',text:'건강과 성장을 위한 청소년기 영양의 중요성을 이해하여 자신의 식생활을 평가하고, 식생활 문제를 개선하여 건강한 식생활을 실천한다.',ideas:['나의 한 끼 이야기 글쓰기','아침밥 살리기 프로젝트']},
+    {sub:M,core:1,code:'[9기가02-02]',text:'한국인 영양소 섭취기준과 식사구성안을 바탕으로 균형 잡힌 식사를 계획한다.',ideas:['균형 식판 게임 만들기','우리 반 추천 식단 짜기']},
+    {sub:M,core:1,code:'[9기가02-03]',text:'건강과 환경을 고려한 식품의 선택, 관리, 보관 방법을 탐색하여 실생활에 적용한다.',ideas:['편의점, 환생시키기!','과자 성분표 탐정단','식품 보관 캠페인']},
+    {sub:M,core:1,code:'[9기가02-04]',text:'개인과 가족의 영양 요구와 지속가능성을 충족하는 식사를 계획하고 조리한다.',ideas:['제철·로컬 푸드 한 끼','제로 웨이스트 급식 챌린지']}
+  ],
+  '고등학교':[
+    {sub:H,core:1,code:'[12기가01-03]',text:'식생활문화에 반영된 미래 변화의 요소를 발견하고 이를 비판적으로 수용하여 식생활 문제를 개선하고 건강한 식생활 문화를 실천한다.',ideas:['미래 식탁 제안서 (대체식품·HMR)','저탄소 한 끼 캠페인']},
+    {sub:HL,core:1,code:'[12생활02-02]',text:'식품 가공의 원리를 이해하고 올바른 정보 분별 능력을 길러 가공식품을 건강하고 안전하게 이용하는 방안을 탐색하며, 관련된 분야의 진로를 탐색한다.',ideas:['가공식품 라벨 탐정단','첨가물 팩트체크 카드뉴스']},
+    {sub:HL,core:1,code:'[12생활02-03]',text:'올바른 식재료를 선택하고 조리 과정 중에 일어나는 성분 등의 변화를 이해하여 과학적 원리를 적용한 음식을 만든다.',ideas:['조리 과학 실험 레시피북','영양을 지키는 조리법 대결']},
+    {sub:HJ,core:1,code:'[12자립03-01]',text:'자신만의 인생 음식을 만들 수 있는 능력을 기르고, 건강을 유지하는 1인 식사의 선택 방안을 탐색하여 실천한다.',ideas:['나만의 인생 음식 레시피','자취 대비 1인 건강 식사 가이드']},
+    {sub:H,code:'[12기가01-02]',text:'생활문화에 대한 문화감수성을 바탕으로 한국 의식주 생활문화의 독창적 요소를 탐색하고, 다른 나라의 생활문화를 비교⋅분석한다.',ideas:['한식 vs 세계 식문화 전시회','우리 학교 K-급식 소개 영상']},
+    {sub:H,code:'[12기가02-03]',text:'소비자의 안전을 위협하는 다양한 문제를 비판적으로 성찰하여 소비자 시민성을 반영한 소비생활을 실천한다.',ideas:['식품 안전 팩트체크 뉴스','배달음식 똑똑한 소비 가이드']},
+    {sub:H,code:'[12기가06-04]',text:'생명공학이 인류의 식량자원 확보, 온실가스 배출감소, 생명 연장, 의공학의 발전에 기여할 수 있는 방안을 탐구하고, 생명공학과 관련된 문제를 창의적으로 해결하는 과정에서 공학의 가치를 인식한다.',ideas:['대체 단백질, 미래 식량 토론회','배양육 찬반 토크']},
+    {sub:HL,code:'[12생활02-01]',text:'생활습관병의 원인을 분석하고, 올바른 관리법을 익혀 건강한 삶을 위한 실천 방안을 탐색하고 관련 분야로의 진로를 탐색한다.',ideas:['생활습관병 예방 식단 챌린지','혈당 스파이크 팩트체크']}
+  ]
+};
+const ALL_STDS=Object.values(STDS_BY).flat();
 const PRODUCTS=['캠페인','게임','카드뉴스','숏폼 영상','글 모음집','레시피북','포스터·피켓','식단표','인포그래픽','발표회'];
 const AREAS=['지식','창의성','소통','공동체','실천'];
 const TOOLS=['Gemini','Canvas','캔바','Gem','Deep Research'];
@@ -730,9 +757,13 @@ function renderSheet(){
 
 /* ---------- 화면 구성 ---------- */
 function renderStds(){
-  $('#stds').innerHTML=STDS.map((s,i)=>'<button class="std'+(S.stdCode===s.code?' on':'')+'" data-std="'+i+'"><code>'+s.code+'</code><p>'+esc(s.text)+'</p><div class="idea">💡 '+s.ideas.map(esc).join(' · ')+'</div></button>').join('');
-  $$('[data-std]').forEach(b=>b.onclick=()=>{const s=STDS[b.dataset.std]; S.stdCode=s.code; S.stdText=s.text; $('#stdCustom').value=''; renderStds(); refresh();});
-  const cur=STDS.find(s=>s.code===S.stdCode);
+  const list=STDS_BY[S.level]||[];
+  const card=s=>{const i=ALL_STDS.indexOf(s); return '<button class="std'+(S.stdCode===s.code?' on':'')+'" data-std="'+i+'"><div class="sub">'+esc(s.sub)+'</div><code>'+s.code+'</code><p>'+esc(s.text)+'</p><div class="idea">💡 '+s.ideas.map(esc).join(' · ')+'</div></button>'};
+  const core=list.filter(s=>s.core), plus=list.filter(s=>!s.core);
+  $('#stdLevel').textContent=S.level;
+  $('#stds').innerHTML='<div class="stdgrp">🍚 영양·식생활과 바로 이어져요</div>'+core.map(card).join('')+(plus.length?'<div class="stdgrp">🌿 함께 엮기 좋아요 <span class="muted">(건강·환경·농업·식문화)</span></div>'+plus.map(card).join(''):'');
+  $$('[data-std]').forEach(b=>b.onclick=()=>{const s=ALL_STDS[b.dataset.std]; S.stdCode=s.code; S.stdText=s.text; $('#stdCustom').value=''; renderStds(); refresh();});
+  const cur=ALL_STDS.find(s=>s.code===S.stdCode);
   $('#titleIdeas').innerHTML=cur?'<span class="muted" style="align-self:center">이런 이름 어때요?</span>'+cur.ideas.map(t=>'<button class="chip" data-title="'+esc(t)+'">'+esc(t)+'</button>').join(''):'';
   $$('[data-title]').forEach(b=>b.onclick=()=>{S.title=b.dataset.title; $('#title').value=S.title; refresh();});
 }
@@ -788,6 +819,7 @@ function bindInputs(){
     el[el.tagName==='SELECT'?'onchange':'oninput']=()=>{
       S[k]=el.value;
       if(k==='sessions') renderLessons();
+      if(k==='level') renderStds();
       if(k==='product') drawProduct();
       refresh();
     };
@@ -804,7 +836,7 @@ $('#resetBtn').onclick=()=>{ if(confirm('적은 내용을 모두 지우고 처�
 $('#fillExample').onclick=()=>{
   if((S.title||S.question)&&!confirm('지금 적은 내용 위에 예시를 채울까요?')) return;
   Object.assign(S,{level:'중학교',grade:'1학년',minutes:'45',sessions:'3',classNote:'편의점 간식을 자주 사 먹고, 채소 반찬을 많이 남겨요',
-    stdCode:STDS[3].code,stdText:STDS[3].text,title:'편의점, 환생시키기!',
+    stdCode:STDS_BY['중학교'][3].code,stdText:STDS_BY['중학교'][3].text,title:'편의점, 환생시키기!',
     bigIdea:'똑똑하게 고르면 편의점 한 끼도 내 몸을 살리는 한 끼가 될 수 있다.',
     question:'편의점 음식으로도 건강한 한 끼, 가능할까?',product:'건강 꿀조합 소개 숏폼 영상',
     mission:'후배들에게 5,000원 건강 꿀조합을 숏폼 영상으로 알려서 편의점 선택을 바꿔 보기',
