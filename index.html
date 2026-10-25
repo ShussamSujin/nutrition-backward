@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영양수업 같이 바꾸기 · 실습 도우미</title>
+<meta name="description" content="2022 개정 교육과정 백워드 설계로 영양·식생활 프로젝트 수업을 한 장에 설계하고, AI에게 부탁할 문장(프롬프트)을 자동으로 만들어 주는 연수 실습 도우미">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='22' cy='40' rx='18' ry='9' fill='%23E9B98A' stroke='%234a3b52' stroke-width='3'/%3E%3Cpath d='M8 38 Q12 18 22 17 Q33 18 36 38Z' fill='%23fff8e8' stroke='%234a3b52' stroke-width='3'/%3E%3Cpath d='M38 40 L60 34' stroke='%234a3b52' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#4a3b52; --ink-soft:#6f6176;
+  --yellow:#ffe27a; --orange:#ffad5c; --pink:#f07fb8; --pink-soft:#f9c9d8;
+  --blue:#7cc6ea; --teal:#5fbcb2; --green:#93cf74; --cream:#fffbf2; --rice:#fff8e8;
+  --card:rgba(255,251,242,.94);
+  --s1:#ffe27a; --s2:#ffbf7a; --s3:#f7a9c9; --s4:#8fd3cb; --s5:#b4dd8f; --s6:#c9b8f0;
+  --wob:255px 18px 225px 18px/18px 225px 18px 255px;
+  --wob2:18px 225px 18px 255px/255px 18px 225px 18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; color:var(--ink); font-family:"Gowun Dodum",system-ui,sans-serif; font-size:17px; line-height:1.7;
+  background-color:#fde9c4;
+  background-image:
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(255,150,70,.75), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 0% 0%, rgba(255,232,120,.9), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(90,180,230,.65), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(120,200,120,.55), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 50% 55%, rgba(247,169,201,.45), transparent 70%),
+    linear-gradient(160deg,#ffe9a8 0%,#ffd3b0 35%,#f6d2e2 60%,#bfe3ef 100%);
+  background-attachment:fixed;
+}
+body::before{ /* 수채화 종이 결 */
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.35; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{position:relative; z-index:1; max-width:980px; margin:0 auto; padding:0 16px}
+h1,h2,h3,.jua{font-family:"Jua",sans-serif; font-weight:400; letter-spacing:-.01em}
+a{color:inherit}
+
+/* ===== 히어로 ===== */
+.hero{position:relative; margin-top:14px; border:3px solid var(--ink); border-radius:var(--wob); overflow:hidden;
+  background:
+    radial-gradient(ellipse 70% 70% at 100% 0%, #ffb46a, transparent 65%),
+    radial-gradient(ellipse 60% 70% at 0% 0%, #ffe887, transparent 65%),
+    radial-gradient(ellipse 60% 80% at 0% 100%, #5fb4e4, transparent 70%),
+    radial-gradient(ellipse 45% 60% at 35% 70%, #66c2b8, transparent 70%),
+    #fbd6c2;
+  box-shadow:5px 6px 0 rgba(74,59,82,.18);}
+.hero svg{display:block; width:100%; height:auto}
+.hero-text{position:absolute; left:4%; top:7%; max-width:56%}
+.hero-text .tag{display:inline-block; background:var(--cream); border:2px solid var(--ink); border-radius:var(--wob2); padding:2px 12px; font-size:14px}
+.hero-text h1{margin:.25em 0 .1em; font-size:clamp(26px,5.2vw,48px); line-height:1.15; color:#fff; -webkit-text-stroke:2px var(--ink); paint-order:stroke fill; text-shadow:3px 3px 0 var(--ink)}
+@media (max-width:640px){.hero-text{position:relative; left:auto; top:auto; max-width:none; padding:4px 16px 16px; margin-top:-40px}}
+.hero-text p{margin:0; font-size:clamp(14px,2vw,18px); background:rgba(255,251,242,.8); display:inline; padding:2px 6px; border-radius:6px; -webkit-box-decoration-break:clone; box-decoration-break:clone}
+@keyframes float{0%,100%{transform:translateX(0)}50%{transform:translateX(14px)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.fl1{animation:float 9s ease-in-out infinite}
+.fl2{animation:float 12s ease-in-out infinite reverse}
+.bob{animation:bob 3.2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.fl1,.fl2,.bob{animation:none}}
+
+/* ===== 정거장(스텝) ===== */
+.stops{position:sticky; top:0; z-index:5; margin:14px -16px 0; padding:10px 16px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;
+  background:linear-gradient(180deg,rgba(253,233,196,.96),rgba(253,233,196,.85)); backdrop-filter:blur(4px)}
+.stops::-webkit-scrollbar{display:none}
+.stop{flex:0 0 auto; border:2.5px solid var(--ink); background:var(--cream); border-radius:var(--wob2); padding:6px 14px; cursor:pointer; font-family:"Jua"; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; transition:transform .15s}
+.stop:hover{transform:translateY(-2px) rotate(-1deg)}
+.stop .n{display:inline-grid; place-items:center; width:24px; height:24px; border-radius:50%; border:2px solid var(--ink); font-size:13px; background:#fff}
+.stop.on{box-shadow:3px 3px 0 var(--ink); transform:translateY(-2px)}
+.stop.done .n{background:var(--green)}
+.stop[data-i="0"].on{background:var(--s6)} .stop[data-i="1"].on{background:var(--s1)} .stop[data-i="2"].on{background:var(--s2)}
+.stop[data-i="3"].on{background:var(--s3)} .stop[data-i="4"].on{background:var(--s4)} .stop[data-i="5"].on{background:var(--s5)} .stop[data-i="6"].on{background:#fff}
+
+/* ===== 카드 ===== */
+.panel{display:none; margin:18px 0 28px}
+.panel.on{display:block; animation:pop .35s ease}
+@keyframes pop{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.card{background:var(--card); border:2.5px solid var(--ink); border-radius:var(--wob); padding:22px 22px 20px; margin:16px 0; box-shadow:4px 5px 0 rgba(74,59,82,.15); position:relative}
+.card.alt{border-radius:var(--wob2)}
+.ptitle{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.ptitle h2{margin:0; font-size:clamp(24px,4vw,32px)}
+.badge{font-family:"Jua"; border:2px solid var(--ink); border-radius:999px; padding:1px 12px; font-size:14px; background:#fff}
+.time{font-size:14px; color:var(--ink-soft)}
+.lead{font-size:18px; margin:.4em 0 0}
+h3{margin:0 0 .4em; font-size:21px}
+.muted{color:var(--ink-soft); font-size:15px}
+.hl{background:linear-gradient(transparent 55%, rgba(255,226,122,.9) 55%); padding:0 2px}
+
+/* 여행 비유 */
+.trip{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px}
+.trip > div{border:2px dashed var(--ink); border-radius:var(--wob2); padding:12px; background:#fff}
+.trip b{font-family:"Jua"; font-size:18px; display:block}
+.trip .em{font-size:28px}
+.arrow{font-family:"Jua"}
+@media (max-width:640px){.trip{grid-template-columns:1fr}}
+
+/* 입력 */
+label.f{display:block; font-family:"Jua"; font-size:17px; margin:14px 0 6px}
+label.f small{font-family:"Gowun Dodum"; color:var(--ink-soft); font-size:14px; margin-left:4px}
+input[type=text],textarea,select{width:100%; font:inherit; color:var(--ink); background:#fff; border:2px solid var(--ink); border-radius:12px 16px 12px 18px; padding:10px 12px; outline:none}
+textarea{min-height:90px; resize:vertical}
+input[type=text]:focus,textarea:focus,select:focus{box-shadow:0 0 0 4px rgba(240,127,184,.35)}
+.row{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+@media (max-width:640px){.row{grid-template-columns:1fr 1fr}}
+
+/* 칩 */
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+.chip{border:2px solid var(--ink); background:#fff; border-radius:999px; padding:4px 14px; cursor:pointer; font:inherit; font-size:15px; color:var(--ink)}
+.chip:hover{background:var(--rice)}
+.chip.on{background:var(--pink-soft); box-shadow:2px 2px 0 var(--ink)}
+
+/* 성취기준 카드 */
+.stds{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:12px; margin-top:10px}
+.std{border:2.5px solid var(--ink); border-radius:var(--wob2); background:#fff; padding:14px; cursor:pointer; text-align:left; font:inherit; color:var(--ink); transition:transform .15s}
+.std:hover{transform:rotate(-.6deg) translateY(-2px)}
+.std.on{background:var(--s1); box-shadow:4px 4px 0 var(--ink)}
+.std code{font-family:"Jua"; font-size:17px; background:var(--pink-soft); border-radius:8px; padding:0 6px}
+.std p{margin:.4em 0; font-size:15px}
+.std .idea{font-size:14px; color:var(--ink-soft)}
+
+/* 프롬프트 박스 */
+.pbox{border:2.5px solid var(--ink); border-radius:16px 20px 14px 22px; background:#fff; margin-top:12px; overflow:hidden}
+.pbox .ph{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 12px; background:linear-gradient(90deg,var(--s1),var(--s3)); border-bottom:2px solid var(--ink); font-family:"Jua"}
+.pbox .pt{padding:14px 16px; font-size:16px; line-height:1.85; white-space:pre-wrap; word-break:keep-all}
+.seg{display:block; margin-bottom:4px}
+.seg i{font-style:normal; font-family:"Jua"; font-size:13px; border:1.5px solid var(--ink); border-radius:999px; padding:0 8px; margin-right:6px; vertical-align:1px}
+.seg.r i{background:#ffe27a} .seg.s i{background:#ffc79a} .seg.q i{background:#f7a9c9} .seg.h i{background:#8fd3cb}
+mark{background:#ffd7e6; color:#b0306f; border-radius:4px; padding:0 3px}
+.btns{display:flex; gap:8px; flex-wrap:wrap}
+.btn{font-family:"Jua"; font-size:16px; border:2.5px solid var(--ink); border-radius:var(--wob2); background:#fff; color:var(--ink); padding:6px 16px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:transform .12s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--pink); color:#fff; box-shadow:3px 3px 0 var(--ink)}
+.btn.sm{font-size:14px; padding:3px 12px}
+.btn.go{background:var(--teal); color:#fff}
+
+/* 체크 */
+.checks{list-style:none; padding:0; margin:8px 0 0}
+.checks li{margin:6px 0}
+.checks label{display:flex; gap:10px; align-items:flex-start; cursor:pointer}
+.checks input{appearance:none; flex:0 0 26px; height:26px; border:2.5px solid var(--ink); border-radius:8px 10px 7px 11px; background:#fff; margin-top:2px; cursor:pointer; display:grid; place-items:center}
+.checks input:checked{background:var(--green)}
+.checks input:checked::after{content:"✓"; font-family:"Jua"; color:var(--ink); font-size:17px}
+
+.tip{display:flex; gap:10px; align-items:flex-start; background:rgba(255,226,122,.45); border:2px dashed var(--ink); border-radius:var(--wob2); padding:10px 14px; margin-top:14px; font-size:16px}
+.tip .e{font-size:22px; line-height:1.3}
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px}
+.cmp > div{border:2px solid var(--ink); border-radius:14px; padding:10px 12px; background:#fff}
+.cmp .bad{background:#f1eef2} .cmp .good{background:#e8f7df}
+@media (max-width:640px){.cmp{grid-template-columns:1fr}}
+
+/* 차시 */
+.lesson{display:grid; grid-template-columns:110px 1fr; gap:10px; align-items:start; margin-top:10px}
+.lesson .ln{font-family:"Jua"; border:2.5px solid var(--ink); border-radius:var(--wob2); background:var(--s4); text-align:center; padding:6px 4px; line-height:1.3}
+.lesson .ln small{display:block; font-family:"Gowun Dodum"; font-size:13px}
+@media (max-width:560px){.lesson{grid-template-columns:1fr}}
+
+/* 아래 이동 */
+.nav{display:flex; justify-content:space-between; gap:10px; margin-top:10px}
+
+/* 한 장 설계표 */
+.sheet{background:#fff; border:3px solid var(--ink); border-radius:14px; overflow:hidden}
+.sheet h3{margin:0; padding:12px 16px; background:linear-gradient(90deg,var(--s1),var(--s2),var(--s3)); border-bottom:2.5px solid var(--ink); font-size:22px}
+.sheet table{width:100%; border-collapse:collapse}
+.sheet th,.sheet td{border-bottom:1.5px solid #d9cfd9; padding:10px 14px; text-align:left; vertical-align:top; font-size:16px}
+.sheet th{width:150px; font-family:"Jua"; font-weight:400; background:var(--rice); white-space:nowrap}
+.sheet td{white-space:pre-wrap; word-break:keep-all}
+.sheet tr:last-child th,.sheet tr:last-child td{border-bottom:0}
+.empty{color:#b9a9b9}
+.stage{font-family:"Jua"; color:var(--ink-soft)}
+@media (max-width:560px){.sheet th{width:auto; white-space:normal}.sheet th,.sheet td{display:block}.sheet th{border-bottom:0; padding-bottom:2px}}
+
+/* KPT */
+.kpt{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.kpt > div{border:2.5px solid var(--ink); border-radius:var(--wob2); padding:10px; background:#fff}
+.kpt b{font-family:"Jua"; font-size:20px}
+.kpt textarea{min-height:80px; margin-top:4px}
+@media (max-width:640px){.kpt{grid-template-columns:1fr}}
+
+/* 도구함 */
+.tools{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+@media (max-width:760px){.tools{grid-template-columns:1fr}}
+.tools .card{margin:0}
+.mini{width:100%; border-collapse:collapse; font-size:15px}
+.mini td{border-bottom:1.5px dashed #d6c9d6; padding:8px 4px; vertical-align:top}
+.mini td:first-child{width:38%; color:var(--ink-soft)}
+.safe{counter-reset:s; list-style:none; padding:0; margin:0}
+.safe li{counter-increment:s; position:relative; padding-left:36px; margin:8px 0}
+.safe li::before{content:counter(s); position:absolute; left:0; top:1px; width:26px; height:26px; border:2px solid var(--ink); border-radius:50%; display:grid; place-items:center; font-family:"Jua"; background:var(--s3); font-size:14px}
+
+/* 토스트 */
+.toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(30px); opacity:0; background:var(--ink); color:#fff; font-family:"Jua"; padding:10px 20px; border-radius:999px; transition:.25s; z-index:20; pointer-events:none}
+.toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+
+footer{position:relative; z-index:1; text-align:center; padding:26px 16px 36px; font-size:14px; color:var(--ink)}
+footer .fbox{display:inline-block; background:rgba(255,251,242,.85); border:2px solid var(--ink); border-radius:var(--wob2); padding:10px 18px}
+
+.flow6{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:10px}
+.flow6 > div{border:2px solid var(--ink); border-radius:12px; background:#fff; padding:8px; text-align:center; font-size:14px; line-height:1.4}
+.flow6 b{display:block; font-family:"Jua"; font-size:20px}
+@media (max-width:640px){.flow6{grid-template-columns:repeat(2,1fr)}}
+
+@media print{
+  body{background:#fff} body::before{display:none}
+  .hero,.stops,.panel:not(#p5),.noprint,footer,.toast{display:none!important}
+  #p5{display:block!important}
+  .card{box-shadow:none; border:0; padding:0; background:#fff}
+  .sheet{border:2px solid #333}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= 히어로 ================= -->
+<header class="hero">
+  <svg viewBox="0 0 900 400" aria-hidden="true">
+    <defs>
+      <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="3"/></filter>
+      <g id="cloud">
+        <ellipse cx="0" cy="0" rx="46" ry="18" fill="#f8c3d3"/>
+        <ellipse cx="-24" cy="-8" rx="24" ry="16" fill="#f8c3d3"/>
+        <ellipse cx="14" cy="-12" rx="26" ry="18" fill="#f8c3d3"/>
+        <ellipse cx="6" cy="-14" rx="12" ry="6" fill="#fff" opacity=".8"/>
+        <ellipse cx="-26" cy="-12" rx="8" ry="4" fill="#fff" opacity=".7"/>
+      </g>
+      <g id="puff" fill="#fff" stroke="#4a3b52" stroke-width="1.6">
+        <path d="M0 0 q-6 -8 2 -11 q4 -7 11 -2 q8 -3 9 5 q6 4 0 9 q-2 7 -10 4 q-6 4 -10 -1 q-7 0 -2 -4z"/>
+      </g>
+    </defs>
+
+    <!-- 구름 -->
+    <g class="fl1"><use href="#cloud" x="250" y="62"/><use href="#cloud" x="720" y="170" transform="scale(.8)"/></g>
+    <g class="fl2"><use href="#cloud" x="560" y="250"/><use href="#cloud" x="60" y="300" transform="scale(1.1)"/><use href="#cloud" x="830" y="90" transform="scale(.7)"/></g>
+
+    <!-- 언덕 -->
+    <g filter="url(#rough)">
+      <path d="M520 400 C 600 250, 700 150, 900 170 L900 400 Z" fill="#8fcb73" stroke="#4a3b52" stroke-width="3"/>
+      <path d="M720 400 C 780 320, 840 300, 900 310 L900 400Z" fill="#7bbd62" stroke="#4a3b52" stroke-width="2.5"/>
+    </g>
+    <g stroke="#4a3b52" stroke-width="1.6" stroke-linecap="round" opacity=".55">
+      <path d="M640 240 l3 -8 M660 222 l3 -8 M690 205 l3 -8 M720 196 l3 -8 M760 190 l3 -8 M800 186 l3 -8 M620 270 l3 -8 M680 260 l3 -8 M740 240 l3 -8 M820 230 l3 -8 M860 214 l3 -8 M600 300 l3 -8 M700 300 l3 -8"/>
+    </g>
+    <!-- 브로콜리 나무 -->
+    <g stroke="#4a3b52" stroke-width="2.4">
+      <rect x="836" y="140" width="10" height="34" rx="4" fill="#cde7b0"/>
+      <circle cx="830" cy="132" r="14" fill="#5fae4e"/><circle cx="850" cy="128" r="15" fill="#6dbb58"/><circle cx="841" cy="116" r="13" fill="#79c463"/>
+    </g>
+
+    <!-- 포크 + 소시지 -->
+    <g class="bob" style="animation-delay:-1s">
+      <path d="M560 70 L780 66" stroke="#4a3b52" stroke-width="13" stroke-linecap="round"/>
+      <path d="M560 70 L780 66" stroke="#e8e6ef" stroke-width="8" stroke-linecap="round"/>
+      <path d="M520 56 h44 M520 70 h44 M520 84 h44" stroke="#4a3b52" stroke-width="7" stroke-linecap="round"/>
+      <path d="M520 56 h44 M520 70 h44 M520 84 h44" stroke="#e8e6ef" stroke-width="3" stroke-linecap="round"/>
+      <rect x="456" y="44" width="78" height="50" rx="25" transform="rotate(-12 495 69)" fill="#d9584a" stroke="#4a3b52" stroke-width="3"/>
+      <path d="M470 60 q8 -6 16 0 M490 54 q8 -6 16 0" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>
+      <use href="#puff" x="430" y="40"/><use href="#puff" x="600" y="104" transform="scale(.9)"/>
+    </g>
+
+    <!-- 숟가락 + 밥 -->
+    <g transform="translate(0 60)">
+      <path d="M210 258 L690 222" stroke="#4a3b52" stroke-width="16" stroke-linecap="round"/>
+      <path d="M210 258 L690 222" stroke="#e9b98a" stroke-width="10" stroke-linecap="round"/>
+      <ellipse cx="135" cy="262" rx="100" ry="34" fill="#e9b98a" stroke="#4a3b52" stroke-width="3"/>
+      <path d="M48 256 Q50 170 110 158 Q130 140 150 156 Q205 168 220 258 Q140 280 48 256Z" fill="#fff8e8" stroke="#4a3b52" stroke-width="3"/>
+      <g fill="none" stroke="#c9bba5" stroke-width="2" stroke-linecap="round">
+        <path d="M90 200 q4 -3 8 0 M120 185 q4 -3 8 0 M150 205 q4 -3 8 0 M105 230 q4 -3 8 0 M170 236 q4 -3 8 0 M75 240 q4 -3 8 0 M135 220 q4 -3 8 0 M180 210 q4 -3 8 0"/>
+      </g>
+      <use href="#puff" x="40" y="150"/><use href="#puff" x="196" y="140" transform="scale(.8)"/><use href="#puff" x="240" y="190" transform="scale(.7)"/>
+    </g>
+
+    <!-- 분홍 친구 -->
+    <g transform="translate(240 55)"><g class="bob">
+      <!-- 머리끈 꼬리 -->
+      <path d="M392 120 C 430 98, 470 110, 500 100 C 480 122, 450 128, 420 132" fill="#f07fb8" stroke="#4a3b52" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M352 108 C 340 80, 356 70, 368 86" fill="#f07fb8" stroke="#4a3b52" stroke-width="3"/>
+      <!-- 몸 -->
+      <path d="M336 214 Q334 176 360 170 L390 170 Q414 176 412 214 Z" fill="#f07fb8" stroke="#4a3b52" stroke-width="3"/>
+      <path d="M342 214 h28 v18 h-28z M380 214 h28 v18 h-28z" fill="#6ec7a8" stroke="#4a3b52" stroke-width="3" stroke-linejoin="round"/>
+      <!-- 머리 -->
+      <path d="M332 150 Q330 104 374 102 Q420 104 418 150 Q418 182 374 182 Q332 182 332 150Z" fill="#f07fb8" stroke="#4a3b52" stroke-width="3"/>
+      <path d="M352 140 q10 -10 20 0 q-10 8 -20 0z M380 140 q10 -10 20 0 q-10 8 -20 0z" fill="#fff" stroke="#4a3b52" stroke-width="2.4"/>
+      <circle cx="363" cy="140" r="3.4" fill="#4a3b52"/><circle cx="391" cy="140" r="3.4" fill="#4a3b52"/>
+      <path d="M350 132 q12 -8 24 -2 M378 130 q12 -6 24 2" stroke="#4a3b52" stroke-width="2.4" fill="#d55f9b"/>
+      <ellipse cx="378" cy="162" rx="5" ry="3.4" fill="#4a3b52"/>
+      <ellipse cx="350" cy="156" rx="6" ry="3" fill="#ff9fc8"/><ellipse cx="404" cy="156" rx="6" ry="3" fill="#ff9fc8"/>
+      <!-- 손에 든 작은 숟가락 -->
+      <path d="M414 190 l18 -26" stroke="#4a3b52" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="436" cy="158" rx="8" ry="11" fill="#ffd36e" stroke="#4a3b52" stroke-width="2.4"/>
+    </g></g>
+  </svg>
+  <div class="hero-text">
+    <span class="tag">2022 개정 교육과정 · 백워드 설계 · AI 프롬프트</span>
+    <h1>영양수업,<br>같이 바꿔볼까요!!</h1>
+    <p>빈칸만 채우면 내 수업 한 장이 완성되고,<br>AI에게 부탁할 말도 저절로 만들어져요.</p>
+  </div>
+</header>
+
+<!-- ================= 정거장 ================= -->
+<nav class="stops" id="stops" aria-label="실습 단계">
+  <button class="stop" data-i="0"><span class="n">0</span>준비</button>
+  <button class="stop" data-i="1"><span class="n">1</span>성취기준</button>
+  <button class="stop" data-i="2"><span class="n">2</span>목적지</button>
+  <button class="stop" data-i="3"><span class="n">3</span>인증샷</button>
+  <button class="stop" data-i="4"><span class="n">4</span>경로</button>
+  <button class="stop" data-i="5"><span class="n">5</span>한 장 완성</button>
+  <button class="stop" data-i="6"><span class="n">🧰</span>AI 도구함</button>
+</nav>
+
+<!-- ================= 0. 준비 ================= -->
+<section class="panel" id="p0">
+  <div class="card">
+    <div class="ptitle"><span class="badge" style="background:var(--s6)">준비</span><h2>여행 가방 싸기</h2></div>
+    <p class="lead">오늘은 <span class="hl">거꾸로(백워드) 설계</span>로 내 영양 프로젝트 수업 한 장을 만들어요.<br>여행 계획 짜듯이, 도착지부터 정하면 훨씬 덜 헤매요.</p>
+    <div class="trip">
+      <div><span class="em">🏁</span><b>① 목적지</b>아이들이 끝까지 가져갈 <b style="display:inline;font-size:inherit">한 문장</b>과 <b style="display:inline;font-size:inherit">핵심 질문</b>을 정해요.</div>
+      <div><span class="em">📸</span><b>② 도착 인증샷</b>도착했다는 걸 보여 줄 <b style="display:inline;font-size:inherit">결과물</b>과 <b style="display:inline;font-size:inherit">평가 기준(루브릭)</b>을 정해요.</div>
+      <div><span class="em">🗺️</span><b>③ 경로</b>거기까지 가는 <b style="display:inline;font-size:inherit">차시별 활동</b>을 짜요.</div>
+    </div>
+    <p class="muted" style="margin-top:12px">💾 적은 내용은 이 기기 브라우저에 자동으로 저장돼요. 창을 닫았다가 다시 열어도 그대로 있어요.</p>
+  </div>
+
+  <div class="card alt">
+    <h3>🧳 우리 반 이야기부터 알려 주세요</h3>
+    <p class="muted" style="margin:0">여기 적은 내용이 AI에게 부탁할 말 속에 자동으로 들어가요. 학생 이름 같은 개인정보는 적지 않아요!</p>
+    <div class="row">
+      <div><label class="f" for="level">학교급</label>
+        <select id="level" data-k="level"><option>초등학교</option><option selected>중학교</option><option>고등학교</option></select></div>
+      <div><label class="f" for="grade">학년</label>
+        <select id="grade" data-k="grade"><option>1학년</option><option>2학년</option><option>3학년</option><option>4학년</option><option>5학년</option><option>6학년</option></select></div>
+      <div><label class="f" for="minutes">한 차시</label>
+        <select id="minutes" data-k="minutes"><option value="40">40분</option><option value="45" selected>45분</option><option value="50">50분</option></select></div>
+      <div><label class="f" for="sessions">몇 차시?</label>
+        <select id="sessions" data-k="sessions"><option value="2">2차시</option><option value="3" selected>3차시</option><option value="4">4차시</option><option value="5">5차시</option></select></div>
+    </div>
+    <label class="f" for="classNote">우리 반 아이들은 이래요 <small>(선택) 예) 아침을 자주 거르는 아이가 많아요</small></label>
+    <input type="text" id="classNote" data-k="classNote" placeholder="예) 편의점 간식을 자주 사 먹고, 채소 반찬을 많이 남겨요">
+  </div>
+
+  <div class="card">
+    <h3>⏱️ 워크숍 60분, 이렇게 흘러가요</h3>
+    <div class="flow6">
+      <div><b>10분</b>성취기준 고르기</div>
+      <div><b>10분</b>핵심 질문 만들기</div>
+      <div><b>15분</b>결과물과 루브릭</div>
+      <div><b>15분</b>차시 활동 짜기</div>
+      <div><b>10분</b>함께 나누기</div>
+    </div>
+    <div class="tip"><span class="e">🌱</span><div>시간이 모자라면 <b>3단계(인증샷)</b>까지만 해도 충분해요. 나머지는 학교에서 이어 가시면 돼요!!</div></div>
+    <div class="nav noprint"><span></span>
+      <div class="btns"><button class="btn" id="fillExample">🍙 예시로 채워 보기</button><button class="btn pri" data-go="1">출발해요 →</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 1. 성취기준 ================= -->
+<section class="panel" id="p1">
+  <div class="card">
+    <div class="ptitle"><span class="badge" style="background:var(--s1)">STEP 1</span><h2>마음 가는 성취기준, 딱 하나만!</h2><span class="time">⏱ 10분</span></div>
+    <p class="lead">교육과정 속 성취기준이 우리 여행의 <span class="hl">출발 지도</span>예요. 마음 가는 카드 하나를 눌러 주세요.</p>
+    <div class="stds" id="stds"></div>
+    <label class="f" for="stdCustom">초등·고등이거나 다른 성취기준을 쓰고 싶다면 <small>직접 적어요</small></label>
+    <input type="text" id="stdCustom" placeholder="예) [6실02-03] 균형 잡힌 식사의 중요성을 알고 …">
+  </div>
+
+  <div class="card alt">
+    <h3>🍱 프로젝트 이름 붙이기</h3>
+    <p class="muted" style="margin:0">아이들이 "재밌겠다!" 할 이름이면 최고예요. 안 떠오르면 아래 부탁 문장을 AI에게 보내 보세요.</p>
+    <label class="f" for="title">프로젝트 이름</label>
+    <input type="text" id="title" data-k="title" placeholder="예) 편의점, 환생시키기!">
+    <div class="chips" id="titleIdeas"></div>
+    <div class="pbox" data-p="topic"></div>
+    <div class="nav noprint"><button class="btn" data-go="0">← 준비</button><button class="btn pri" data-go="2">목적지 정하러 →</button></div>
+  </div>
+</section>
+
+<!-- ================= 2. 목적지 ================= -->
+<section class="panel" id="p2">
+  <div class="card">
+    <div class="ptitle"><span class="badge" style="background:var(--s2)">STEP 2 · 🏁 목적지</span><h2>아이들 심장을 뛰게 할 핵심 질문!</h2><span class="time">⏱ 10분</span></div>
+    <p class="lead">"이 프로젝트가 끝나면 아이들 머릿속에 <span class="hl">딱 하나 남겨야 할 것</span>은?"</p>
+    <div class="cmp">
+      <div class="bad"><b class="jua">😐 외우면 끝나는 질문</b><br>제로 웨이스트란 무엇인가?</div>
+      <div class="good"><b class="jua">🤩 탐구하고 싶은 질문</b><br>어떻게 하면 우리 동네 사람들이 음식물 쓰레기를 줄이는 식당을 찾아오게 만들 수 있을까?</div>
+    </div>
+    <div class="pbox" data-p="question"></div>
+    <div class="tip"><span class="e">💡</span><div>AI가 준 답 중 마음에 드는 걸 골라 <b>선생님 말투로 다듬어서</b> 아래에 적어요. 그대로 옮기지 않아도 돼요.</div></div>
+  </div>
+
+  <div class="card alt">
+    <label class="f" for="bigIdea" style="margin-top:0">✨ 빅 아이디어 <small>아이들이 오래 가져갈 핵심 메시지 한 문장</small></label>
+    <input type="text" id="bigIdea" data-k="bigIdea" placeholder="예) 나의 한 끼 선택이 내 몸과 지구를 바꿀 수 있다.">
+    <label class="f" for="question">❓ 핵심 질문 <small>아이들에게 던질 탐구 질문</small></label>
+    <input type="text" id="question" data-k="question" placeholder="예) 편의점 음식으로도 건강한 한 끼, 가능할까?">
+    <h3 style="margin-top:18px">🔍 스스로 점검해요</h3>
+    <ul class="checks" data-checks="q">
+      <li><label><input type="checkbox" data-c="q1">정답이 하나로 딱 떨어지지 않나요?</label></li>
+      <li><label><input type="checkbox" data-c="q2">우리 학교, 우리 동네 이야기와 이어지나요?</label></li>
+      <li><label><input type="checkbox" data-c="q3">아이들이 "해 보고 싶다!" 할 것 같나요?</label></li>
+    </ul>
+    <div class="nav noprint"><button class="btn" data-go="1">← 성취기준</button><button class="btn pri" data-go="3">인증샷 정하러 →</button></div>
+  </div>
+</section>
+
+<!-- ================= 3. 인증샷 ================= -->
+<section class="panel" id="p3">
+  <div class="card">
+    <div class="ptitle"><span class="badge" style="background:var(--s3)">STEP 3 · 📸 도착 인증샷</span><h2>결승선과 성공 기준 정하기</h2><span class="time">⏱ 15분</span></div>
+    <p class="lead">"뭘 만들면 끝나고, 어떻게 하면 잘한 걸까?" 그냥 보고서는 노잼! <span class="hl">실제 '액션'</span>을 미션으로 줘요.</p>
+    <label class="f">① 최종 결과물 고르기 <small>눌러서 고르거나 직접 적어요</small></label>
+    <div class="chips" id="productChips"></div>
+    <input type="text" id="product" data-k="product" placeholder="예) 건강 꿀조합 소개 숏폼 영상" style="margin-top:10px">
+    <label class="f" for="mission">② 미션 한 줄 <small>누구에게, 무엇을 해서, 어떤 변화를?</small></label>
+    <input type="text" id="mission" data-k="mission" placeholder="예) 후배들에게 숏폼 영상으로 건강 꿀조합을 알려 편의점 선택을 바꿔 보기">
+    <details style="margin-top:10px"><summary class="jua" style="cursor:pointer">🤔 결과물이 안 떠오를 때 쓰는 부탁 문장</summary><div class="pbox" data-p="product"></div></details>
+  </div>
+
+  <div class="card alt">
+    <h3>③ 루브릭(성공 기준) 부탁하기</h3>
+    <p class="muted" style="margin:0">무엇을 볼지 영역을 골라요. "이거 잘하면 인정!" 기준을 <b>미리</b> 아이들에게 보여 주면 훨씬 덜 헤매요.</p>
+    <div class="chips" id="areaChips"></div>
+    <div class="pbox" data-p="rubric"></div>
+    <label class="f" for="rubric">AI가 만든 루브릭을 다듬어서 붙여 넣어요 <small>(선택)</small></label>
+    <textarea id="rubric" data-k="rubric" placeholder="예)&#10;지식 - 상: 성분표를 보고 당류·나트륨을 비교해 설명할 수 있어요 / 중: … / 하: …&#10;창의성 - …"></textarea>
+    <div class="pbox" data-p="kidsRubric"></div>
+    <div class="nav noprint"><button class="btn" data-go="2">← 목적지</button><button class="btn pri" data-go="4">경로 짜러 →</button></div>
+  </div>
+</section>
+
+<!-- ================= 4. 경로 ================= -->
+<section class="panel" id="p4">
+  <div class="card">
+    <div class="ptitle"><span class="badge" style="background:var(--s4)">STEP 4 · 🗺️ 경로</span><h2>배움의 지도 그리기</h2><span class="time">⏱ 15분</span></div>
+    <p class="lead">결승선까지 가는 길이에요. <span class="hl">결과물을 만드는 데 꼭 필요한 것만</span> 차례대로 놓아요.</p>
+    <div class="pbox" data-p="lessons"></div>
+    <div id="lessons"></div>
+  </div>
+  <div class="card alt">
+    <h3>🔍 스스로 점검해요</h3>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-c="l1">시간이 우리 학교 사정에 맞나요?</label></li>
+      <li><label><input type="checkbox" data-c="l2">결과물을 만드는 데 꼭 필요한 것만 들어 있나요?</label></li>
+      <li><label><input type="checkbox" data-c="l3">아이들이 직접 정하는 순간이 있나요?</label></li>
+    </ul>
+    <label class="f">이 수업에서 쓸 AI 도구</label>
+    <div class="chips" id="toolChips"></div>
+    <div class="tip"><span class="e">🎨</span><div>여유가 되시면 Gemini <b>Canvas</b>에서 활동지·퀴즈·웹페이지까지 뽑아 보세요. 부탁 문장은 <a href="#" data-go="6">🧰 AI 도구함</a>에 있어요!</div></div>
+    <div class="nav noprint"><button class="btn" data-go="3">← 인증샷</button><button class="btn pri" data-go="5">한 장으로 모아 보기 →</button></div>
+  </div>
+</section>
+
+<!-- ================= 5. 한 장 완성 ================= -->
+<section class="panel" id="p5">
+  <div class="card noprint">
+    <div class="ptitle"><span class="badge" style="background:var(--s5)">STEP 5</span><h2>내 프로젝트 설계, 한 장으로!!</h2></div>
+    <p class="lead">완벽하지 않아도 괜찮아요. <span class="hl">다음 주에 바로 써 볼 수 있는 한 장</span>이면 충분해요.</p>
+    <div class="btns" style="margin-top:10px">
+      <button class="btn pri" id="printBtn">🖨️ 인쇄 · PDF 저장</button>
+      <button class="btn" id="copySheet">📋 글로 복사하기</button>
+      <button class="btn" id="resetBtn">🧹 처음부터 다시</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sheet" id="sheet"></div>
+  </div>
+
+  <div class="card alt noprint">
+    <h3>✅ 다 채우셨으면 스스로 점검해 봐요</h3>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-c="f1">핵심 질문이 성취기준과 이어지나요?</label></li>
+      <li><label><input type="checkbox" data-c="f2">결과물을 보면 아이들이 배운 걸 알 수 있나요?</label></li>
+      <li><label><input type="checkbox" data-c="f3">루브릭을 미리 아이들에게 보여줄 수 있나요?</label></li>
+      <li><label><input type="checkbox" data-c="f4">모든 활동이 결승선을 향해 있나요?</label></li>
+      <li><label><input type="checkbox" data-c="f5">아이들이 직접 정하고 만드는 순간이 있나요?</label></li>
+      <li><label><input type="checkbox" data-c="f6">AI 결과를 확인하는 단계가 들어 있나요?</label></li>
+    </ul>
+    <p class="muted">빈칸이 있어도 괜찮아요. 그게 다음에 고칠 지점이에요.</p>
+    <h3 style="margin-top:14px">🤖 AI 코치에게 점검 부탁하기</h3>
+    <div class="pbox" data-p="review"></div>
+  </div>
+
+  <div class="card noprint">
+    <h3>🌈 오늘 연수 KPT, 세 칸만 채워 볼까요?</h3>
+    <div class="kpt">
+      <div><b>Keep</b><div class="muted">내 수업에 꼭 가져가고 싶은 것</div><textarea data-k="kptK"></textarea></div>
+      <div><b>Problem</b><div class="muted">아직 막막하거나 걱정되는 것</div><textarea data-k="kptP"></textarea></div>
+      <div><b>Try</b><div class="muted">다음 수업에서 딱 하나 시도해 볼 것</div><textarea data-k="kptT"></textarea></div>
+    </div>
+    <label class="f" for="oneLine">✍️ 오늘, 나는 어떤 선생님이 되고 싶어졌나요?</label>
+    <input type="text" id="oneLine" data-k="oneLine" placeholder="한 줄만 남겨 주세요">
+    <h3 style="margin-top:18px">🏫 학교로 돌아가면, 작은 첫걸음 세 개</h3>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-c="g1">나만의 Gem "영양수업 설계 도우미" 하나 만들기 <span class="muted">(지시문은 AI 도구함에!)</span></label></li>
+      <li><label><input type="checkbox" data-c="g2">캔바 교육용 신청하기 (교사 인증)</label></li>
+      <li><label><input type="checkbox" data-c="g3">오늘 설계한 한 장, 한 차시만 해 보기</label></li>
+    </ul>
+    <div class="nav"><button class="btn" data-go="4">← 경로</button><button class="btn go" data-go="6">🧰 AI 도구함 →</button></div>
+  </div>
+</section>
+
+<!-- ================= 6. AI 도구함 ================= -->
+<section class="panel" id="p6">
+  <div class="card">
+    <div class="ptitle"><span class="badge">🧰 AI 도구함</span><h2>AI = 의욕 넘치는 신규 보조 선생님</h2></div>
+    <p class="lead">일은 빠른데 우리 학교 사정은 하나도 몰라요. 그래서 <span class="hl">자세히 알려 주고, 꼭 확인하고, 판단은 우리가!</span></p>
+    <div class="btns" style="margin-top:10px">
+      <a class="btn pri" href="https://gemini.google.com/app" target="_blank" rel="noopener">✨ Gemini 열기</a>
+      <a class="btn" href="https://gemini.google.com/gems/create" target="_blank" rel="noopener">💎 Gem 만들기</a>
+      <a class="btn" href="https://www.canva.com/education/" target="_blank" rel="noopener">🎨 캔바 교육용</a>
+    </div>
+  </div>
+
+  <div class="tools">
+    <div class="card">
+      <h3>🧁 잘 부탁하는 공식, 역·상·요·형</h3>
+      <p class="muted" style="margin:0">네 칸을 채우면 부탁 문장이 완성돼요.</p>
+      <label class="f" for="b_r">역할 <small>너는 누구야?</small></label>
+      <input type="text" id="b_r" data-k="b_r" placeholder="너는 중학교 영양교사야.">
+      <label class="f" for="b_s">상황 <small>누구와, 몇 분, 어떤 반?</small></label>
+      <input type="text" id="b_s" data-k="b_s" placeholder="1학년, 45분 수업, 아침 결식이 많은 반이야.">
+      <label class="f" for="b_q">요청 <small>무엇을 해 줘?</small></label>
+      <input type="text" id="b_q" data-k="b_q" placeholder="아침밥의 중요성을 스스로 느끼게 할 활동을 제안해 줘.">
+      <label class="f" for="b_h">형식 <small>몇 개를, 어떤 모양으로?</small></label>
+      <input type="text" id="b_h" data-k="b_h" placeholder="3가지를 표로, 준비물과 시간도 같이.">
+      <div class="pbox" data-p="builder"></div>
+    </div>
+
+    <div class="card alt">
+      <h3>💬 답이 마음에 안 들 때</h3>
+      <p class="muted" style="margin:0">버리지 말고, 이어서 말을 걸어 보세요. 눌러서 복사!</p>
+      <table class="mini" id="followups"></table>
+      <h3 style="margin-top:18px">🛡️ 이것만은 꼭 지켜요</h3>
+      <ol class="safe">
+        <li><b>개인정보는 넣지 않기</b> — 학생 이름, 건강 정보, 알레르기 명단 ✕</li>
+        <li><b>영양 정보는 꼭 확인하기</b> — 숫자·기준·효능은 식약처, 한국인 영양소 섭취기준 등으로 한 번 더</li>
+        <li><b>학생 사용 전 확인하기</b> — 서비스 이용 연령과 학교·교육청 지침</li>
+        <li><b>AI 사용을 솔직하게 밝히기</b> — "어디까지 AI가 도왔는지" 적어 보기</li>
+      </ol>
+    </div>
+
+    <div class="card alt">
+      <h3>📚 이럴 때 이렇게 부탁해요</h3>
+      <table class="mini" id="situations"></table>
+    </div>
+
+    <div class="card">
+      <h3>💎 나만의 Gem 지시문</h3>
+      <p class="muted" style="margin:0">Gem 이름을 <b>"영양수업 설계 도우미"</b>로 짓고, 아래 글을 지시사항 칸에 붙여 넣어요. 매번 "너는 영양교사야…"라고 안 해도 돼요!</p>
+      <div class="pbox" data-p="gem"></div>
+    </div>
+
+    <div class="card" style="grid-column:1/-1">
+      <h3>🎮 Canvas · 캔바로 결과물까지</h3>
+      <p class="muted" style="margin:0">Gemini 입력창 아래에서 <b>Canvas</b>를 고른 뒤 보내요. 화면을 보면서 "버튼 더 크게"처럼 말로 고치면 돼요. 게임 속 영양 정보는 꼭 선생님이 확인!</p>
+      <div class="pbox" data-p="canvasSheet"></div>
+      <div class="pbox" data-p="canvasGame"></div>
+      <div class="pbox" data-p="canvasQuiz"></div>
+      <div class="pbox" data-p="gamify"></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="fbox">
+    영양수업 같이 바꾸기 · 실습 도우미<br>
+    © 2026 Google Certified Trainer &amp; Innovator Sujin Lee<br>
+    문의: <a href="mailto:gajungssamzzang@gmail.com">gajungssamzzang@gmail.com</a>
+  </div>
+</footer>
+<div class="toast" id="toast">복사했어요!</div>
+
+<script>
+(function(){
+const KEY='nutri-backward-v1';
+const STDS=[
+  {code:'[9기가01-02]',text:'의생활, 식생활이 청소년기 성장과 건강에 미치는 영향을 탐색하고 바람직한 실천 방안을 탐색하여 실천한다.',ideas:['성장기 우리 몸에 맞는 식생활 실천 챌린지','나의 몸 사용 설명서']},
+  {code:'[9기가01-03]',text:'건강과 성장을 위한 청소년기 영양의 중요성을 이해하여 자신의 식생활을 평가하고, 식생활 문제를 개선하여 건강한 식생활을 실천한다.',ideas:['나의 한 끼 이야기 글쓰기','아침밥 살리기 프로젝트']},
+  {code:'[9기가02-02]',text:'한국인 영양소 섭취기준과 식사구성안을 바탕으로 균형 잡힌 식사를 계획한다.',ideas:['균형 식판 게임 만들기','우리 반 추천 식단 짜기']},
+  {code:'[9기가02-03]',text:'건강과 환경을 고려한 식품의 선택, 관리, 보관 방법을 탐색하여 실생활에 적용한다.',ideas:['편의점, 환생시키기!','과자 성분표 탐정단','식품 보관 캠페인']},
+  {code:'[9기가02-04]',text:'개인과 가족의 영양 요구와 지속가능성을 충족하는 식사를 계획하고 조리한다.',ideas:['제철·로컬 푸드 한 끼','제로 웨이스트 급식 챌린지']}
+];
+const PRODUCTS=['캠페인','게임','카드뉴스','숏폼 영상','글 모음집','레시피북','포스터·피켓','식단표','인포그래픽','발표회'];
+const AREAS=['지식','창의성','소통','공동체','실천'];
+const TOOLS=['Gemini','Canvas','캔바','Gem','Deep Research'];
+const STAGES={
+  2:[['첫걸음 + 지식과 기술','문제에 공감하고, 꼭 필요한 것 배우기'],['만들기 + 발표와 돌아보기','결과물 만들고 나누기']],
+  3:[['첫걸음 · 지식과 기술','문제 공감 + 꼭 필요한 지식'],['우리만의 길 · 만들기','모둠 아이디어 → 결과물 제작'],['발표와 돌아보기','나누고 KPT 회고']],
+  4:[['첫걸음','문제에 공감하는 시작'],['지식과 기술','꼭 필요한 것만 배우기'],['만들기','모둠별 결과물 제작'],['발표와 돌아보기','나누고 KPT 회고']],
+  5:[['첫걸음','문제에 공감하는 시작'],['지식과 기술','꼭 필요한 것만 배우기'],['우리만의 길','아이디어 내고 다듬기'],['만들기','결과물 제작'],['발표와 돌아보기','나누고 KPT 회고']]
+};
+const DEF={level:'중학교',grade:'1학년',minutes:'45',sessions:'3',classNote:'',stdCode:'',stdText:'',title:'',bigIdea:'',question:'',product:'',mission:'',areas:['지식','창의성','소통','공동체'],rubric:'',lessons:['','','','',''],tools:['Gemini'],checks:{},kptK:'',kptP:'',kptT:'',oneLine:'',b_r:'',b_s:'',b_q:'',b_h:'',step:0};
+let S;
+try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
+if(!Array.isArray(S.lessons)) S.lessons=DEF.lessons.slice();
+while(S.lessons.length<5) S.lessons.push('');
+let saveT;
+function save(){clearTimeout(saveT); saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},250)}
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const B=(v,label)=>(v&&String(v).trim())?String(v).trim():'⟦'+label+'⟧';
+const std=()=>S.stdCode?(S.stdCode+' '+S.stdText).trim():(S.stdText||'');
+
+/* ---------- 프롬프트 ---------- */
+function who(){return S.level+' '+S.grade}
+function roleT(){return '너는 2022 개정 교육과정과 백워드 설계를 잘 아는 '+S.level+' 영양교사야.'}
+function note(){return S.classNote.trim()?' 우리 반은 이런 모습이야: '+S.classNote.trim()+'.':''}
+function flowText(){return STAGES[S.sessions].map(s=>s[0]).join(' → ')}
+const P={
+  topic:()=>({title:'🍳 프로젝트 주제 추천받기',segs:[
+    ['r',roleT()],
+    ['s',who()+' 학생들과 '+S.minutes+'분 수업 '+S.sessions+'차시로 프로젝트 수업을 하려고 해. 성취기준은 "'+B(std(),'성취기준을 골라 주세요')+'"이야.'+note()],
+    ['q','이 성취기준으로 학생들이 "해 보고 싶다!" 할 만한 프로젝트 주제 5가지를 추천해 줘. 우리 학교 급식이나 우리 동네처럼 실제 생활과 이어지면 좋겠어.'],
+    ['h','표로 정리해 줘. 칸은 "재미있는 프로젝트 이름 | 한 줄 설명 | 만들 결과물"로.']]}),
+  question:()=>({title:'🏁 빅 아이디어 & 핵심 질문 만들기',segs:[
+    ['r',roleT()],
+    ['s',who()+' 학생들과 '+S.sessions+'차시 프로젝트 수업을 해. 성취기준은 "'+B(std(),'성취기준')+'"이고, 프로젝트 이름은 "'+B(S.title,'프로젝트 이름')+'"이야.'+note()],
+    ['q','백워드 설계 1단계(목적지 정하기)를 도와줘. ① 수업이 끝나고도 학생들이 오래 기억할 "빅 아이디어(핵심 메시지)"를 한 문장으로 2개, ② 학생이 흥미를 갖고 탐구할 수 있는, 개방적이고 도전적인 "핵심 질문"을 3가지 버전으로 만들어 줘. 핵심 질문은 정답이 하나로 딱 떨어지지 않고, 우리 학교·우리 동네 이야기와 이어지면 좋겠어.'],
+    ['h','번호를 붙여 '+S.grade+' 학생이 바로 알아듣는 쉬운 말로 쓰고, 핵심 질문마다 "왜 좋은 질문인지" 한 줄씩 덧붙여 줘.']]}),
+  product:()=>({title:'📸 결과물 아이디어 받기',segs:[
+    ['r',roleT()],
+    ['s',who()+', '+S.sessions+'차시 프로젝트야. 핵심 질문은 "'+B(S.question,'핵심 질문')+'"이야.'],
+    ['q','이 질문에 답하는 최종 결과물 아이디어 4가지를 제안해 줘. 그냥 보고서 말고, 친구·후배·가족 같은 진짜 사람들에게 보여 주고 행동을 바꾸는 "액션"이 되면 좋겠어.'],
+    ['h','표로 정리해 줘: 결과물 | 누구에게 보여 주나 | 학생이 하는 일 | 걸리는 시간.']]}),
+  rubric:()=>({title:'📏 루브릭 만들기',segs:[
+    ['r',roleT()],
+    ['s',who()+' 대상 '+S.sessions+'차시 프로젝트야. 성취기준은 "'+B(std(),'성취기준')+'", 핵심 질문은 "'+B(S.question,'핵심 질문')+'", 최종 결과물은 "'+B(S.product,'결과물')+'"이야.'+(S.mission.trim()?' 학생 미션은 "'+S.mission.trim()+'"이야.':'')],
+    ['q','최종 결과물의 평가 기준을 '+B(S.areas.join(', '),'영역')+' '+S.areas.length+'가지 영역으로 나누고, 영역마다 "상/중/하" 수준의 구체적인 설명이 들어간 루브릭을 만들어 줘. 성취기준에 도달했는지 확인할 수 있어야 해.'],
+    ['h','표로 정리해 줘.']]}),
+  kidsRubric:()=>({title:'🧒 루브릭을 아이들 말로 바꾸기',segs:[
+    ['q','위에서 만든 루브릭을 '+S.level+' '+S.grade+' 학생이 읽고 바로 알아듣는 말로 바꿔 줘. "~할 수 있어요"처럼 학생 입장의 문장으로, 프로젝트 시작할 때 미리 나눠 줄 수 있게.'],
+    ['h','표 모양은 그대로 두고, 어려운 낱말은 빼 줘.']]}),
+  lessons:()=>({title:'🗺️ 차시별 활동 짜기',segs:[
+    ['r',roleT()],
+    ['s',who()+' 대상, 한 차시 '+S.minutes+'분, 모두 '+S.sessions+'차시 프로젝트야. 성취기준은 "'+B(std(),'성취기준')+'", 핵심 질문은 "'+B(S.question,'핵심 질문')+'", 최종 결과물은 "'+B(S.product,'결과물')+'"이고, 평가 영역은 '+S.areas.join(', ')+'야.'+note()],
+    ['q',flowText()+' 순서로 차시별 활동을 짜 줘. 결과물을 만드는 데 꼭 필요한 것만 담고, 학생이 직접 고르고 정하는 순간을 차시마다 하나씩 넣어 줘. AI를 쓰는 활동이 있다면 학생이 AI 결과를 확인하는 단계도 넣어 줘.'],
+    ['h','표로 정리해 줘: 차시 | 단계 | 활동(도입·전개·정리) | 준비물 | 루브릭과 이어지는 점.']]}),
+  review:()=>({title:'🤖 내 설계 점검받기',segs:[
+    ['r','너는 백워드 설계와 프로젝트 수업을 잘 아는 따뜻한 수업 코치야.'],
+    ['s','내가 짠 영양 프로젝트 수업 설계야.\n'+sheetText()],
+    ['q','다음 6가지로 살펴봐 줘. 1) 핵심 질문이 성취기준과 이어지나 2) 결과물을 보면 배운 걸 알 수 있나 3) 루브릭을 미리 보여 줄 수 있나 4) 모든 활동이 결승선을 향하나 5) 학생이 직접 정하고 만드는 순간이 있나 6) AI 결과를 확인하는 단계가 있나.'],
+    ['h','잘된 점 2개, 고치면 더 좋아질 점 2개를 쉬운 말과 구체적인 예시로 알려 줘.']]}),
+  builder:()=>({title:'✨ 완성된 부탁 문장',segs:[
+    ['r',B(S.b_r,'역할')],['s',B(S.b_s,'상황')],['q',B(S.b_q,'요청')],['h',B(S.b_h,'형식')]]}),
+  gem:()=>({title:'💎 Gem 지시사항',plain:
+`너는 2022 개정 교육과정과 백워드 설계를 잘 아는 "영양수업 설계 도우미"야. 사용하는 사람은 초·중·고 영양교사야.
+
+[진행 순서]
+1. 먼저 학교급, 학년, 한 차시 시간, 차시 수, 성취기준, 우리 반 특징을 물어봐.
+2. 목적지: 빅 아이디어(핵심 메시지) 한 문장과 핵심 질문 3가지 버전을 제안해.
+3. 도착 인증샷: 실제 행동으로 이어지는 최종 결과물과 상/중/하 루브릭을 표로 제안해.
+4. 경로: 첫걸음 → 지식과 기술 → 만들기 → 발표와 돌아보기 순서로 차시별 활동을 표로 짜 줘.
+
+[지켜 줄 것]
+- 쉬운 말로 짧게, 정리는 표로 해 줘.
+- 활동마다 학생이 직접 고르고 정하는 순간을 넣어 줘.
+- 영양 수치나 기준을 말할 때는 근거(식품의약품안전처, 한국인 영양소 섭취기준 등)를 밝히고, 확실하지 않으면 "확인이 필요해요"라고 말해 줘.
+- 학생 이름, 건강 정보 같은 개인정보는 묻지 말고, 입력되면 지우라고 안내해 줘.
+- 한 번에 다 하지 말고, 단계마다 선생님의 선택을 듣고 다음으로 넘어가.`}),
+  canvasSheet:()=>({title:'📝 Canvas · 학생 활동지',segs:[
+    ['s','프로젝트 "'+B(S.title,'프로젝트 이름')+'"의 핵심 질문은 "'+B(S.question,'핵심 질문')+'"이고, 결과물은 "'+B(S.product,'결과물')+'"이야.'],
+    ['q',who()+' 학생이 1차시에 쓸 활동지를 만들어 줘. 문제에 공감하는 질문 2개, 모둠이 직접 정할 칸, 오늘 배운 점 한 줄 칸을 넣어 줘.'],
+    ['h','A4 한 장, 쉬운 말, 귀여운 제목.']]}),
+  canvasGame:()=>({title:'🎮 Canvas · 균형 식판 게임',segs:[
+    ['q',S.level+'생용 "오늘의 균형 식판 만들기" 게임을 만들어 줘. 음식을 골라 식판에 담으면 식사구성안 기준으로 영양 균형 점수를 보여 줘.'],
+    ['h','버튼은 크게, 점수는 별로 표시하고, 어떤 식품군이 부족한지 한 줄로 알려 줘.']]}),
+  canvasQuiz:()=>({title:'❓ Canvas · 복습 퀴즈',segs:[
+    ['q','핵심 질문 "'+B(S.question,'핵심 질문')+'"와 관련해서 '+who()+' 수준의 OX 퀴즈 10문제를 만들어 줘.'],
+    ['h','문제마다 짧은 해설을 붙이고, 영양 정보의 출처도 적어 줘.']]}),
+  gamify:()=>({title:'🕵️ 게이미피케이션 아이디어',segs:[
+    ['q',S.level+'생 대상 "'+B(S.title,'프로젝트 이름')+'" 프로젝트에 적용할 게이미피케이션 아이디어를 "영양 탐정단" 컨셉으로 구체적으로 제안해 줘.'],
+    ['h','탐정 등급, 해결해야 할 미션, 보상 시스템을 포함해서 표로.']]})
+};
+const SEGN={r:'역할',s:'상황',q:'요청',h:'형식'};
+function promptPlain(p){return p.plain?p.plain:p.segs.map(s=>s[1]).join(' ').replace(/⟦(.*?)⟧/g,'[$1]')}
+function promptHTML(p){
+  if(p.plain) return esc(p.plain);
+  return p.segs.map(s=>'<span class="seg '+s[0]+'"><i>'+SEGN[s[0]]+'</i>'+esc(s[1]).replace(/⟦(.*?)⟧/g,'<mark>[$1]</mark>')+'</span>').join('');
+}
+function renderPrompts(){
+  $$('.pbox').forEach(box=>{
+    const p=P[box.dataset.p]();
+    if(!box.dataset.ready){
+      box.innerHTML='<div class="ph"><span>'+esc(p.title)+'</span><span class="btns"><button class="btn sm" data-copy>📋 복사</button><a class="btn sm" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini 열기 ↗</a></span></div><div class="pt"></div>';
+      box.querySelector('[data-copy]').onclick=()=>copy(promptPlain(P[box.dataset.p]()),'부탁 문장을 복사했어요! Gemini에 붙여 넣어요');
+      box.dataset.ready=1;
+    }
+    box.querySelector('.pt').innerHTML=promptHTML(p);
+  });
+}
+
+/* ---------- 한 장 ---------- */
+function lessonRows(){return STAGES[S.sessions].map((st,i)=>({n:i+1,stage:st[0],txt:S.lessons[i]||''}))}
+function sheetText(){
+  const L=lessonRows().map(r=>'  '+r.n+'차시('+r.stage+'): '+(r.txt||'-')).join('\n');
+  return [
+    '· 프로젝트명: '+(S.title||'-'),
+    '· 대상: '+who()+', '+S.minutes+'분 × '+S.sessions+'차시',
+    '· 성취기준: '+(std()||'-'),
+    '· 빅 아이디어: '+(S.bigIdea||'-'),
+    '· 핵심 질문: '+(S.question||'-'),
+    '· 최종 결과물: '+(S.product||'-')+(S.mission?' / 미션: '+S.mission:''),
+    '· 평가 계획(루브릭 영역): '+S.areas.join(' · ')+(S.rubric?'\n'+S.rubric:''),
+    '· 차시별 활동:\n'+L,
+    '· 쓸 AI 도구: '+(S.tools.join(' · ')||'-')
+  ].join('\n');
+}
+function renderSheet(){
+  const td=v=>v&&String(v).trim()?esc(v):'<span class="empty">아직 비어 있어요</span>';
+  const L=lessonRows().map(r=>'<div style="margin-bottom:6px"><span class="stage">'+r.n+'차시 · '+esc(r.stage)+'</span><br>'+td(r.txt)+'</div>').join('');
+  $('#sheet').innerHTML='<h3>🍙 '+(S.title?esc(S.title):'나의 영양·식생활 프로젝트')+'</h3><table>'+
+    '<tr><th>대상</th><td>'+esc(who())+' · '+S.minutes+'분 × '+S.sessions+'차시</td></tr>'+
+    '<tr><th>성취기준</th><td>'+td(std())+'</td></tr>'+
+    '<tr><th>🏁 빅 아이디어</th><td>'+td(S.bigIdea)+'</td></tr>'+
+    '<tr><th>🏁 핵심 질문</th><td>'+td(S.question)+'</td></tr>'+
+    '<tr><th>📸 최종 결과물</th><td>'+td(S.product)+(S.mission?'<br><span class="muted">미션: '+esc(S.mission)+'</span>':'')+'</td></tr>'+
+    '<tr><th>📸 평가 계획</th><td><b class="jua">'+esc(S.areas.join(' · ')||'-')+'</b>'+(S.rubric?'<br>'+esc(S.rubric):'')+'</td></tr>'+
+    '<tr><th>🗺️ 차시별 활동</th><td>'+L+'</td></tr>'+
+    '<tr><th>쓸 AI 도구</th><td>'+td(S.tools.join(' · '))+'</td></tr>'+
+  '</table>';
+}
+
+/* ---------- 화면 구성 ---------- */
+function renderStds(){
+  $('#stds').innerHTML=STDS.map((s,i)=>'<button class="std'+(S.stdCode===s.code?' on':'')+'" data-std="'+i+'"><code>'+s.code+'</code><p>'+esc(s.text)+'</p><div class="idea">💡 '+s.ideas.map(esc).join(' · ')+'</div></button>').join('');
+  $$('[data-std]').forEach(b=>b.onclick=()=>{const s=STDS[b.dataset.std]; S.stdCode=s.code; S.stdText=s.text; $('#stdCustom').value=''; renderStds(); refresh();});
+  const cur=STDS.find(s=>s.code===S.stdCode);
+  $('#titleIdeas').innerHTML=cur?'<span class="muted" style="align-self:center">이런 이름 어때요?</span>'+cur.ideas.map(t=>'<button class="chip" data-title="'+esc(t)+'">'+esc(t)+'</button>').join(''):'';
+  $$('[data-title]').forEach(b=>b.onclick=()=>{S.title=b.dataset.title; $('#title').value=S.title; refresh();});
+}
+function chipGroup(el,list,key,multi){
+  const draw=()=>{
+    el.innerHTML=list.map(t=>{const on=multi?S[key].includes(t):S[key]===t;return '<button class="chip'+(on?' on':'')+'" data-v="'+esc(t)+'">'+esc(t)+'</button>'}).join('');
+    el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+      const v=c.dataset.v;
+      if(multi){S[key]=S[key].includes(v)?S[key].filter(x=>x!==v):S[key].concat(v)}
+      else{S[key]=v; const inp=$('#'+key); if(inp) inp.value=v}
+      draw(); refresh();
+    });
+  };
+  draw(); return draw;
+}
+let drawProduct;
+function renderLessons(){
+  $('#lessons').innerHTML=STAGES[S.sessions].map((st,i)=>'<div class="lesson"><div class="ln">'+(i+1)+'차시<small>'+esc(st[0])+'</small></div><div><textarea data-lesson="'+i+'" placeholder="'+esc(st[1])+'">'+esc(S.lessons[i]||'')+'</textarea></div></div>').join('');
+  $$('[data-lesson]').forEach(t=>t.oninput=()=>{S.lessons[+t.dataset.lesson]=t.value; refresh();});
+}
+const FOLLOW=[['어려울 때','좀 더 쉽게 말해 줘.'],['딱딱할 때','10대 말투로, 유머러스하게 바꿔 줘.'],['방향이 다를 때','이런 예시처럼 해 줘: '],['한눈에 안 들어올 때','표로 정리해 줘.'],['미심쩍을 때','근거는 어디서 나왔어? 출처를 알려 줘.'],['고르고 싶을 때','다른 버전 3개 더 보여 줘.']];
+const SITU=[['활동이 안 떠오를 때','이 주제로 할 수 있는 모둠 활동 5가지 알려줘.'],['기사가 너무 어려울 때','중학교 1학년이 이해하기 쉬운 말로 바꿔줘.'],['평가 기준이 필요할 때','이 결과물의 루브릭을 상·중·하 표로 만들어줘.'],['복습 퀴즈가 필요할 때','오늘 내용으로 OX 퀴즈 10문제 만들어줘.'],['아이들 글에 피드백할 때','따뜻한 말투로 잘한 점 1개, 고칠 점 1개 알려줘.'],['토론 수업 준비할 때','GMO 식품 안전성 찬반 토론을 할 거야. 찬성·반대 팀이 쓸 핵심 주장과 근거를 3가지씩 정리해줘.'],['쇼츠 대본이 필요할 때','편의점 음식으로 건강하게 한 끼 해결하는 법에 대한 유튜브 쇼츠 대본을 짜줘. 10대 말투로, 유머러스하게.']];
+function miniTable(el,rows){
+  el.innerHTML=rows.map((r,i)=>'<tr><td>'+esc(r[0])+'</td><td><button class="chip" data-mt="'+i+'" style="text-align:left">'+esc(r[1])+'</button></td></tr>').join('');
+  el.querySelectorAll('[data-mt]').forEach(b=>b.onclick=()=>copy(rows[b.dataset.mt][1]));
+}
+
+/* ---------- 공통 ---------- */
+function refresh(){renderPrompts(); renderSheet(); markDone(); save();}
+function markDone(){
+  const done=[true,!!std(),!!(S.question||S.bigIdea),!!S.product,S.lessons.some(Boolean),false,false];
+  $$('.stop').forEach(b=>b.classList.toggle('done',done[b.dataset.i]&&+b.dataset.i>0&&+b.dataset.i<5));
+}
+function go(i){
+  i=+i; S.step=i;
+  $$('.panel').forEach(p=>p.classList.toggle('on',p.id==='p'+i));
+  $$('.stop').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));
+  const on=$('.stop.on'); if(on) on.scrollIntoView({inline:'center',block:'nearest'});
+  const h=$('.hero'), top=h.offsetTop+h.offsetHeight;
+  if(scrollY>top) scrollTo({top:top});
+  save();
+}
+let tt;
+function copy(text,msg){
+  const done=()=>{const t=$('#toast'); t.textContent=msg||'복사했어요!'; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('on'),1800)};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done,()=>fallback(text,done))}else fallback(text,done);
+}
+function fallback(text,done){const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy')}catch(e){} ta.remove(); done();}
+
+function bindInputs(){
+  $$('[data-k]').forEach(el=>{
+    const k=el.dataset.k; el.value=S[k]??'';
+    el[el.tagName==='SELECT'?'onchange':'oninput']=()=>{
+      S[k]=el.value;
+      if(k==='sessions') renderLessons();
+      if(k==='product') drawProduct();
+      refresh();
+    };
+  });
+  $$('[data-c]').forEach(el=>{el.checked=!!S.checks[el.dataset.c]; el.onchange=()=>{S.checks[el.dataset.c]=el.checked; save();}});
+  $('#stdCustom').value=S.stdCode?'':S.stdText;
+  $('#stdCustom').oninput=e=>{S.stdCode=''; S.stdText=e.target.value; renderStds(); refresh();};
+}
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]'); if(g){e.preventDefault(); go(g.dataset.go);}});
+$$('.stop').forEach(b=>b.onclick=()=>go(b.dataset.i));
+$('#printBtn').onclick=()=>{go(5); setTimeout(()=>print(),100)};
+$('#copySheet').onclick=()=>copy(sheetText(),'설계표를 글로 복사했어요!');
+$('#resetBtn').onclick=()=>{ if(confirm('적은 내용을 모두 지우고 처음부터 할까요?')){S=JSON.parse(JSON.stringify(DEF)); try{localStorage.removeItem(KEY)}catch(e){} init(); go(0);} };
+$('#fillExample').onclick=()=>{
+  if((S.title||S.question)&&!confirm('지금 적은 내용 위에 예시를 채울까요?')) return;
+  Object.assign(S,{level:'중학교',grade:'1학년',minutes:'45',sessions:'3',classNote:'편의점 간식을 자주 사 먹고, 채소 반찬을 많이 남겨요',
+    stdCode:STDS[3].code,stdText:STDS[3].text,title:'편의점, 환생시키기!',
+    bigIdea:'똑똑하게 고르면 편의점 한 끼도 내 몸을 살리는 한 끼가 될 수 있다.',
+    question:'편의점 음식으로도 건강한 한 끼, 가능할까?',product:'건강 꿀조합 소개 숏폼 영상',
+    mission:'후배들에게 5,000원 건강 꿀조합을 숏폼 영상으로 알려서 편의점 선택을 바꿔 보기',
+    areas:['지식','창의성','소통','공동체'],
+    rubric:'지식 - 상: 성분표를 보고 당류·나트륨을 비교해 고른 이유를 설명할 수 있어요 / 중: 성분표에서 당류·나트륨을 찾을 수 있어요 / 하: 도움을 받아 성분표를 읽을 수 있어요',
+    lessons:['즐겨 먹는 편의점 간식 포장지 모아 오기 → "성분표 탐정단"이 되어 당류·나트륨 비교하기 → 식사구성안으로 한 끼 기준 알아보기','모둠별로 5,000원 건강 꿀조합 직접 고르기 → 식사구성안으로 점검 → 숏폼 대본 쓰고 AI에게 "고칠 점 1개만" 물어 직접 다듬기 → 촬영','숏폼 상영회 → 루브릭으로 친구 피드백 → 후배 반에 공유 → KPT 회고와 "성장한 점 한 줄"','',''],
+    tools:['Gemini','Canvas','캔바']});
+  init(); go(5);
+};
+function init(){bindInputs(); renderStds(); chipGroup($('#areaChips'),AREAS,'areas',true); chipGroup($('#toolChips'),TOOLS,'tools',true); drawProduct=chipGroup($('#productChips'),PRODUCTS,'product',false); renderLessons(); miniTable($('#followups'),FOLLOW); miniTable($('#situations'),SITU); refresh();}
+init(); go(S.step||0);
+})();
+</script>
+</body>
+</html>
